@@ -1,0 +1,106 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sheet Mapper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      padding: 20px;
+    }
+    input {
+      width: 80px;
+      margin: 5px;
+    }
+    canvas {
+      border: 2px solid #fff;
+      margin-top: 15px;
+      cursor: crosshair;
+    }
+    .box {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📏 Sheet Coordinate Mapper</h2>
+
+<div class="box">
+  <strong>Sheet 1 (Printed Photo)</strong><br>
+  Width: <input id="s1w" type="number"> 
+  Height: <input id="s1h" type="number">
+</div>
+
+<div class="box">
+  <strong>Sheet 2 (Drawing Paper)</strong><br>
+  Width: <input id="s2w" type="number"> 
+  Height: <input id="s2h" type="number">
+</div>
+
+<div class="box">
+  <input type="file" id="imgInput">
+</div>
+
+<canvas id="canvas"></canvas>
+
+<p id="output">Click on the image to get coordinates.</p>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const imgInput = document.getElementById("imgInput");
+const output = document.getElementById("output");
+
+let img = new Image();
+
+imgInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+canvas.addEventListener("click", e => {
+  const s1w = parseFloat(document.getElementById("s1w").value);
+  const s1h = parseFloat(document.getElementById("s1h").value);
+  const s2w = parseFloat(document.getElementById("s2w").value);
+  const s2h = parseFloat(document.getElementById("s2h").value);
+
+  if (!s1w || !s1h || !s2w || !s2h) {
+    output.textContent = "⚠️ Enter all sheet measurements first.";
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const x1 = e.clientX - rect.left;
+  const y1 = e.clientY - rect.top;
+
+  const x2 = (x1 / s1w) * s2w;
+  const y2 = (y1 / s1h) * s2h;
+
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  output.textContent =
+    `Sheet 1 → ( ${x1.toFixed(2)}, ${y1.toFixed(2)} )
+Sheet 2 → ( ${x2.toFixed(2)}, ${y2.toFixed(2)} )`;
+});
+</script>
+
+</body>
+</html>
